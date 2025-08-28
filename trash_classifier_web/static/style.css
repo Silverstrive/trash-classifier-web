@@ -1,0 +1,119 @@
+
+body {
+  background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  color: #222;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  margin: 40px auto;
+  padding: 32px 28px 28px 28px;
+  max-width: 650px;
+  background: #fff;
+  box-shadow: 0 8px 32px rgba(60, 60, 120, 0.12);
+  border-radius: 18px;
+  border: 1px solid #e3e8f0;
+}
+
+h1 {
+  font-size: 2.3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #2a3a5e;
+  letter-spacing: 1px;
+}
+
+form {
+  margin-bottom: 18px;
+}
+
+input[type="file"] {
+  margin: 18px 0 18px 0;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #bfc9d9;
+  background: #f7fafd;
+}
+
+button {
+  background: linear-gradient(90deg, #4caf50 0%, #43e97b 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.15);
+}
+
+.result {
+  margin-top: 32px;
+  padding: 18px 0 0 0;
+  border-top: 1px solid #e3e8f0;
+}
+
+.result img {
+  max-width: 320px;
+  height: auto;
+  margin: 18px auto 18px auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(60, 60, 120, 0.13);
+  display: block;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 18px auto 18px auto;
+  width: 95%;
+  background: #f7fafd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(60, 60, 120, 0.07);
+}
+
+th, td {
+  padding: 10px 14px;
+  text-align: left;
+}
+
+th {
+  background: #e0eafc;
+  color: #2a3a5e;
+  font-weight: 600;
+  border-bottom: 2px solid #bfc9d9;
+}
+
+tr {
+  border-bottom: 1px solid #e3e8f0;
+}
+
+tr:last-child {
+  border-bottom: none;
+}
+
+tr[style*="background: #e0ffe0"] {
+  background: linear-gradient(90deg, #e0ffe0 0%, #f7fafd 100%) !important;
+}
+
+ul {
+  margin: 0 auto 18px auto;
+  padding: 0;
+  max-width: 350px;
+}
+
+ul li {
+  text-align: left;
+  padding: 6px 0;
+  font-size: 1rem;
+  color: #2a3a5e;
+}

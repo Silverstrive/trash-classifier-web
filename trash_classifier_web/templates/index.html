@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Trash Classifier</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>Trash Image Classifier</h1>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="image" required>
+      <button type="submit">Classify This Image</button>
+    </form>
+
+    {% if prediction %}
+      <div class="result">
+        <h2>Prediction: {{ prediction }}</h2>
+        <p>Confidence: {{ confidence }}</p>
+        {% if filename %}
+          <p><strong>Filename:</strong> {{ filename }}</p>
+        {% endif %}
+        <img src="{{ url_for('static', filename=img_path.split('/')[-1]) }}" alt="Uploaded Image" style="max-width: 300px; margin: 10px auto; display: block;">
+        <h3>Class Probabilities</h3>
+        <table style="margin: 0 auto; border-collapse: collapse;">
+          <tr><th style="padding: 4px 12px;">Class</th><th style="padding: 4px 12px;">Probability</th><th style="padding: 4px 12px;">Description</th></tr>
+          {% for class_name, prob in probabilities %}
+            <tr {% if class_name == prediction %}style="background: #e0ffe0; font-weight: bold;"{% endif %}>
+              <td style="padding: 4px 12px;">{{ class_name }}</td>
+              <td style="padding: 4px 12px;">{{ '%.2f' % (prob * 100) }}%</td>
+              <td style="padding: 4px 12px;">{{ class_descriptions[class_name] }}</td>
+            </tr>
+          {% endfor %}
+        </table>
+        <p><strong>Upload Time:</strong> {{ upload_time }}</p>
+        <form method="GET" style="margin-top: 20px;">
+          <button type="submit" style="background: #f44336;">Reset/Clear</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
