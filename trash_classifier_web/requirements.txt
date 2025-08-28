@@ -1,8 +1,7 @@
-Streamlit
-Flask
-tensorflow-cpu
-numpy
-pillow
-matplotlib
-scikit-learn
-requests
+streamlit==1.25.0
+tensorflow==2.19.0
+numpy==1.23.5
+pillow==9.5.0
+matplotlib==3.7.1
+scikit-learn==1.2.2
+requests==2.31.0

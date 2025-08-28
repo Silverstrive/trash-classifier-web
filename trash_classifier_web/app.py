@@ -1,74 +1,72 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  
-import logging
-logging.getLogger('absl').setLevel(logging.ERROR)
-from flask import Flask, render_template, request
-from tensorflow.keras.models import load_model # type: ignore
-from tensorflow.keras.preprocessing import image # type: ignore
 import numpy as np
+import tensorflow as tf
+import streamlit as st
+from PIL import Image
+from datetime import datetime
+from tensorflow.keras.preprocessing import image #type:ignore
 
-app = Flask(__name__)
-model = load_model('trash_classifier_web/model/trash_classifier1.5.h5')
+@st.cache_resource
+def load_trash_model():
+    model_path = os.path.join(os.path.dirname(__file__), "model", "trash_classifier1.5.h5")
+    return tf.keras.models.load_model(model_path)
+
+# Load model
+model = load_trash_model()
+
+# Kelas
 CLASS_NAMES = ['Cardboard', 'Clothes', 'Glass', 'Metal', 'Paper', 'Plastic', 'Shoes', 'Tidak_diketahui']
+CLASS_DESCRIPTIONS = {
+    'Cardboard': 'Kardus dan packaging.',
+    'Clothes': 'Pakaian bekas dan tekstil.',
+    'Glass': 'Botol dan stoples gelas.',
+    'Metal': 'Logam dan besi.',
+    'Paper': 'Produk kertas seperti koran dan buku.',
+    'Plastic': 'Botol, wadah, dan packaging plastik.',
+    'Shoes': 'Sepatu bekas dan footwear.',
+    'Tidak_diketahui': 'Sampah buangan yang tidak masuk ke kategori lain.'
+}
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    prediction = None
-    confidence = None
+# Judul halaman
+st.title("Trash Classifier Image")
 
-    if request.method == 'POST':
-        img_file = request.files['image']
+# Form upload
+uploaded_file = st.file_uploader("Upload an image for classification", type=["jpg", "jpeg", "png"])
 
-        if img_file:
+if uploaded_file is not None:
+    img = Image.open(uploaded_file).convert("RGB")
+    img_resized = img.resize((224, 224))
+    img_array = image.img_to_array(img_resized)
+    img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-            static_dir = os.path.join(app.root_path, 'static')
-            if not os.path.exists(static_dir):
-                os.makedirs(static_dir)
+    result = model.predict(img_array)
+    prediction = CLASS_NAMES[np.argmax(result)]
+    confidence = f"{np.max(result) * 100:.2f}%"
+    probabilities = [(CLASS_NAMES[i], float(result[0][i])) for i in range(len(CLASS_NAMES))]
 
-            img_filename = img_file.filename
-            img_path = os.path.join(static_dir, img_filename)
-            print(f"[DEBUG] Saving uploaded file: {img_filename}")
-            print(f"[DEBUG] Full path: {img_path}")
-            img_file.save(img_path)
-            img_url = f'/static/{img_filename}'
-            print(f"[DEBUG] Image URL for template: {img_url}")
+    upload_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-            img = image.load_img(img_path, target_size=(224, 224))
-            img_array = image.img_to_array(img)
-            img_array = np.expand_dims(img_array, axis=0)
-            img_array = img_array / 255.0
+    st.subheader("Prediction Result")
+    st.write(f"**Prediction:** {prediction}")
+    st.write(f"**Confidence:** {confidence}")
+    st.write(f"**Filename:** {uploaded_file.name}")
+    st.image(img, caption="Uploaded Image", use_column_width=True)
 
-            import datetime
-            result = model.predict(img_array)
-            prediction = CLASS_NAMES[np.argmax(result)]
-            confidence = f"{np.max(result) * 100:.2f}%"
-            probabilities = [(CLASS_NAMES[i], float(result[0][i])) for i in range(len(CLASS_NAMES))]
-            class_descriptions = {
-                'Cardboard': 'Kardus dan packaging.',
-                'Clothes': 'Pakaian bekas dan tekstil.',
-                'Glass': 'Botol dan stoples gelas.',
-                'Metal': 'Logam dan besi.',
-                'Paper': 'Product kertas seperti koran dan buku.',
-                'Plastic': 'Botol, wadah, and packaging plastik.',
-                'Shoes': 'Sepatu bekas dan footwear.',
-                'Tidak_diketahui': 'Sampah buangan yang tidak masuk ke kategori lain.'
-            }
-            upload_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # === TABEL PROBABILITAS DENGAN HIGHLIGHT ===
+    st.subheader("Class Probabilities")
+    highlight_style = "background-color: #ffe599; font-weight: bold; color: black;"  # kuning lembut
+    prob_table = "<table style='margin: 0 auto; border-collapse: collapse;'>"
+    prob_table += "<tr><th style='padding: 6px 14px;'>Class</th><th style='padding: 6px 14px;'>Probability</th><th style='padding: 6px 14px;'>Description</th></tr>"
 
-            return render_template(
-                'index.html',
-                prediction=prediction,
-                confidence=confidence,
-                img_path=img_url,
-                filename=img_filename,
-                probabilities=probabilities,
-                class_descriptions=class_descriptions,
-                upload_time=upload_time,
-            )
+    for CLASS_NAMES, prob in probabilities:
+        row_style = highlight_style if CLASS_NAMES == prediction else ""
+        prob_table += f"<tr style='{row_style}'><td style='padding: 6px 14px;'>{CLASS_NAMES}</td><td style='padding: 6px 14px;'>{prob*100:.2f}%</td><td style='padding: 6px 14px;'>{CLASS_DESCRIPTIONS[CLASS_NAMES]}</td></tr>"
 
-    return render_template('index.html', prediction=prediction)
+    prob_table += "</table>"
+    st.markdown(prob_table, unsafe_allow_html=True)
 
+    st.write(f"**Upload Time:** {upload_time}")
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    # Reset/Clear
+    if st.button("Reset/Clear"):
+        st.experimental_rerun()
