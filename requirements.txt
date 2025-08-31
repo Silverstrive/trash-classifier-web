@@ -1,11 +1,11 @@
 streamlit==1.20.0
-tensorflow==2.11.0
-keras==2.11.0
+tensorflow==2.16.1
+keras==3.3.3
 pandas==1.5.3
-numpy==1.23.5
+numpy==1.26.4
 pillow==9.5.0
-opencv-python==4.6.0.66
+opencv-python==4.9.0.80
 graphviz==0.20.1
 h5py==3.14.0
-protobuf==3.19.6
+protobuf==4.25.3
 gdown==4.7.1
