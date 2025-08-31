@@ -1,48 +1,34 @@
 import os
-import gdown
+import numpy as np
 import tensorflow as tf
 import streamlit as st
-import numpy as np
-from datetime import datetime
+import gdown
 from PIL import Image
-from tensorflow.keras.preprocessing import image
-
-# === Konfigurasi Model ===
-MODEL_DIR = "model"
-MODEL_PATH = os.path.join(MODEL_DIR, "trash_classifier1.6.h5")
-# ID dari file Drive
-GDRIVE_ID = "1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"
-GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_ID}"
-
-# === Download Model ===
-def download_model():
-    if not os.path.exists(MODEL_DIR):
-        os.makedirs(MODEL_DIR)
-    if not os.path.exists(MODEL_PATH):
-        st.info("📥 Downloading model from Google Drive... Please wait")
-        try:
-            gdown.download(GDRIVE_URL, MODEL_PATH, quiet=False)
-        except Exception as e:
-            st.error(f"❌ Gagal mengunduh model dari Google Drive: {e}")
-            return False
-        if not os.path.exists(MODEL_PATH):
-            st.error("❌ Model tidak ditemukan setelah unduhan. Cek link & izin Google Drive.")
-            return False
-    return True
+from datetime import datetime
+from tensorflow.keras.preprocessing import image  # type:ignore
 
 # === Load Model ===
 @st.cache_resource
-def load_model():
-    if not download_model():
-        return None
+def load_trash_model():
+    model_dir = os.path.join(os.path.dirname(__file__), "model")
+    os.makedirs(model_dir, exist_ok=True)
+    model_path = os.path.join(model_dir, "trash_classifier1.6.h5")
+
+    # Download dari Google Drive jika file belum ada
+    if not os.path.exists(model_path):
+        st.write("📥 Downloading model from Google Drive...")
+        st.write("📥 Please wait ...")
+        url = "https://drive.google.com/uc?id=1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"
+        gdown.download(url, model_path, quiet=False)
+
     try:
-        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+        model = tf.keras.models.load_model(model_path, compile=False)
         return model
     except Exception as e:
         st.error(f"Gagal memuat model: {e}")
         return None
 
-model = load_model()
+model = load_trash_model()
 
 # === Class Names ===
 CLASS_NAMES = ["cardboard", "clothes", "glass", "paper", "plastic", "shoes", "tidak_diketahui"]
@@ -103,3 +89,4 @@ if uploaded_file is not None:
 
         except Exception as e:
             st.error(f"⚠️ Terjadi error saat prediksi: {e}")
+
