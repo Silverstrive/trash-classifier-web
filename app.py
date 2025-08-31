@@ -1,33 +1,33 @@
 import os
-import gdown
+import requests
 import tensorflow as tf
 import streamlit as st
 import numpy as np
 from datetime import datetime
 from PIL import Image
-from tensorflow.keras.preprocessing import image
+from tensorflow.keras.preprocessing import image #type:ignore
 
 # === Konfigurasi Model ===
 MODEL_DIR = "model"
 MODEL_PATH = os.path.join(MODEL_DIR, "trash_classifier1.6.h5")
 
-# GDrive ID baru dari model
-GDRIVE_ID = "1cmR1ruxze9TH7t3gY5fZaLqOBnX-ebDI"
-GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_ID}"
+# URL HuggingFace (ganti dengan repo kamu)
+HF_URL = "https://huggingface.co/Silverstrive/trash-classifier/resolve/main/trash_classifier1.6.h5"
 
 # === Download Model ===
 def download_model():
     if not os.path.exists(MODEL_DIR):
         os.makedirs(MODEL_DIR)
     if not os.path.exists(MODEL_PATH):
-        st.info("📥 Downloading model from Google Drive... Please wait")
+        st.info("📥 Downloading model from HuggingFace... Please wait")
         try:
-            gdown.download(GDRIVE_URL, MODEL_PATH, quiet=False)
+            r = requests.get(HF_URL, stream=True)
+            with open(MODEL_PATH, "wb") as f:
+                for chunk in r.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
         except Exception as e:
-            st.error(f"❌ Gagal mengunduh model dari Google Drive: {e}")
-            return False
-        if not os.path.exists(MODEL_PATH):
-            st.error("❌ Model tidak ditemukan setelah unduhan. Cek link & izin Google Drive.")
+            st.error(f"❌ Gagal mengunduh model dari HuggingFace: {e}")
             return False
     return True
 
