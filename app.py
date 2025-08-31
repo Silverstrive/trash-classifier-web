@@ -2,10 +2,18 @@ import os
 import gdown
 import tensorflow as tf
 import streamlit as st
+import numpy as np
+from datetime import datetime
+from PIL import Image
+from tensorflow.keras.preprocessing import image
 
+# ==== Disable file watcher di Streamlit (penting untuk Streamlit Cloud) ====
+os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
+
+# ==== Konfigurasi model ====
 MODEL_DIR = "model"
 MODEL_PATH = os.path.join(MODEL_DIR, "trash_classifier1.6.h5")
-GDRIVE_URL = "https://drive.google.com/uc?id=1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"  # ID file kamu
+GDRIVE_URL = "https://drive.google.com/uc?id=1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"  # ganti dengan file ID kamu
 
 # === Download model kalau belum ada ===
 def download_model():
@@ -19,7 +27,7 @@ def download_model():
             return False
     return True
 
-# === Load model ===
+# === Load model (cache biar gak bolak-balik load) ===
 @st.cache_resource
 def load_model():
     if not download_model():
@@ -99,4 +107,3 @@ if uploaded_file is not None:
                 st.experimental_rerun()
         except Exception as e:
             st.error(f"Terjadi error saat prediksi: {e}")
-
