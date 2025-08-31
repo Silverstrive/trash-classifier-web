@@ -1,35 +1,37 @@
 import os
-import json
-import numpy as np
+import gdown
 import tensorflow as tf
 import streamlit as st
-import gdown
-from PIL import Image
-from datetime import datetime
-from tensorflow.keras.preprocessing import image  # type:ignore
 
-# === Load Model ===
+MODEL_DIR = "model"
+MODEL_PATH = os.path.join(MODEL_DIR, "trash_classifier1.6.h5")
+GDRIVE_URL = "https://drive.google.com/uc?id=1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"  # ID file kamu
+
+# === Download model kalau belum ada ===
+def download_model():
+    if not os.path.exists(MODEL_DIR):
+        os.makedirs(MODEL_DIR)
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("📥 Downloading model from Google Drive... Please wait"):
+            gdown.download(GDRIVE_URL, MODEL_PATH, quiet=False)
+        if not os.path.exists(MODEL_PATH):
+            st.error("❌ Model gagal diunduh. Cek link Google Drive atau izin akses publik.")
+            return False
+    return True
+
+# === Load model ===
 @st.cache_resource
-def load_trash_model():
-    model_dir = os.path.join(os.path.dirname(__file__), "model")
-    os.makedirs(model_dir, exist_ok=True)
-    model_path = os.path.join(model_dir, "trash_classifier1.6.h5")
-
-    # Download dari Google Drive jika file belum ada
-    if not os.path.exists(model_path):
-        st.write("📥 Downloading model from Google Drive...")
-        st.write("📥 Please wait ...")
-        url = "https://drive.google.com/uc?id=1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"
-        gdown.download(url, model_path, quiet=False)
-
+def load_model():
+    if not download_model():
+        return None
     try:
-        model = tf.keras.models.load_model(model_path, compile=False)
+        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
         return model
     except Exception as e:
         st.error(f"Gagal memuat model: {e}")
         return None
 
-model = load_trash_model()
+model = load_model()
 
 # === CLASS_NAMES langsung hardcode ===
 CLASS_NAMES = ["cardboard", "clothes", "glass", "paper", "plastic", "shoes", "tidak_diketahui"]
@@ -97,3 +99,4 @@ if uploaded_file is not None:
                 st.experimental_rerun()
         except Exception as e:
             st.error(f"Terjadi error saat prediksi: {e}")
+
