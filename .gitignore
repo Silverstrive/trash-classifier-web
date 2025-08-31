@@ -1,2 +1,12 @@
 dataset/
 venv/
+program2/
+tfdeploy/
+tfenv/
+.venv/
+# Model files
+model/*.h5
+model/*.keras
+*.pkl
+*.pb
+*.ckpt
