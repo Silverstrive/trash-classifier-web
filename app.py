@@ -1,33 +1,37 @@
 import os
 import requests
+import numpy as np
 import tensorflow as tf
 import streamlit as st
-import numpy as np
 from datetime import datetime
+from tensorflow.keras.preprocessing import image
 from PIL import Image
-from tensorflow.keras.preprocessing import image #type:ignore
 
-# === Konfigurasi Model ===
+# === Konfigurasi path model ===
 MODEL_DIR = "model"
 MODEL_PATH = os.path.join(MODEL_DIR, "trash_classifier1.6.h5")
-
-# URL HuggingFace (ganti dengan repo kamu)
 HF_URL = "https://huggingface.co/Silverstrive/trash-classifier/resolve/main/trash_classifier1.6.h5"
 
-# === Download Model ===
+# === Download Model dari HuggingFace ===
 def download_model():
     if not os.path.exists(MODEL_DIR):
         os.makedirs(MODEL_DIR)
+
     if not os.path.exists(MODEL_PATH):
-        st.info("📥 Downloading model from HuggingFace... Please wait")
+        placeholder = st.empty()
+        placeholder.info("📥 Downloading model from HuggingFace... Please wait")
+
         try:
             r = requests.get(HF_URL, stream=True)
+            r.raise_for_status()
             with open(MODEL_PATH, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
+            placeholder.empty()
+            st.success("✅ Model berhasil diunduh dari HuggingFace!")
         except Exception as e:
-            st.error(f"❌ Gagal mengunduh model dari HuggingFace: {e}")
+            placeholder.error(f"❌ Gagal mengunduh model: {e}")
             return False
     return True
 
@@ -45,7 +49,7 @@ def load_model():
 
 model = load_model()
 
-# === Class Names ===
+# === Kelas klasifikasi ===
 CLASS_NAMES = ["cardboard", "clothes", "glass", "paper", "plastic", "shoes", "tidak_diketahui"]
 
 CLASS_DESCRIPTIONS = {
@@ -58,14 +62,15 @@ CLASS_DESCRIPTIONS = {
     'tidak_diketahui': 'Sampah buangan yang tidak masuk ke kategori lain.'
 }
 
-# === UI ===
+# === Judul Halaman ===
 st.title("🗑️ Trash Classifier Image")
 
+# === Upload Form ===
 uploaded_file = st.file_uploader("Upload an image for classification", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     if model is None:
-        st.error("❌ Model tidak tersedia. Tidak dapat melakukan prediksi.")
+        st.error("Model tidak tersedia. Tidak dapat melakukan prediksi.")
     else:
         try:
             img = Image.open(uploaded_file).convert("RGB")
@@ -73,6 +78,7 @@ if uploaded_file is not None:
             img_array = image.img_to_array(img_resized)
             img_array = np.expand_dims(img_array, axis=0) / 255.0
 
+            # Prediksi
             result = model.predict(img_array)
             prediction = CLASS_NAMES[np.argmax(result)]
             confidence = f"{np.max(result) * 100:.2f}%"
@@ -87,7 +93,7 @@ if uploaded_file is not None:
             st.write(f"**Filename:** {uploaded_file.name}")
             st.image(img, caption="Uploaded Image", use_column_width=True)
 
-            # === Probabilities Table ===
+            # === Tabel Probabilitas ===
             st.subheader("Class Probabilities")
             highlight_style = "background-color: #ffe599; font-weight: bold; color: black;"
             prob_table = "<table style='margin: 0 auto; border-collapse: collapse;'>"
@@ -102,5 +108,9 @@ if uploaded_file is not None:
 
             st.write(f"**Upload Time:** {upload_time}")
 
+            # Reset
+            if st.button("Reset/Clear"):
+                st.session_state.clear()
+                st.experimental_rerun()
         except Exception as e:
-            st.error(f"⚠️ Terjadi error saat prediksi: {e}")
+            st.error(f"Terjadi error saat prediksi: {e}")
