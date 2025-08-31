@@ -7,27 +7,30 @@ from datetime import datetime
 from PIL import Image
 from tensorflow.keras.preprocessing import image
 
-# ==== Disable file watcher di Streamlit (penting untuk Streamlit Cloud) ====
-os.environ["STREAMLIT_SERVER_FILE_WATCHER_TYPE"] = "none"
-
-# ==== Konfigurasi model ====
+# === Konfigurasi Model ===
 MODEL_DIR = "model"
 MODEL_PATH = os.path.join(MODEL_DIR, "trash_classifier1.6.h5")
-GDRIVE_URL = "https://drive.google.com/uc?id=1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"  # ganti dengan file ID kamu
+# ID dari file Drive
+GDRIVE_ID = "1hJMAJ3cDk4hThtv4uGbkE3DnETeWoEoc"
+GDRIVE_URL = f"https://drive.google.com/uc?id={GDRIVE_ID}"
 
-# === Download model kalau belum ada ===
+# === Download Model ===
 def download_model():
     if not os.path.exists(MODEL_DIR):
         os.makedirs(MODEL_DIR)
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("📥 Downloading model from Google Drive... Please wait"):
+        st.info("📥 Downloading model from Google Drive... Please wait")
+        try:
             gdown.download(GDRIVE_URL, MODEL_PATH, quiet=False)
+        except Exception as e:
+            st.error(f"❌ Gagal mengunduh model dari Google Drive: {e}")
+            return False
         if not os.path.exists(MODEL_PATH):
-            st.error("❌ Model gagal diunduh. Cek link Google Drive atau izin akses publik.")
+            st.error("❌ Model tidak ditemukan setelah unduhan. Cek link & izin Google Drive.")
             return False
     return True
 
-# === Load model (cache biar gak bolak-balik load) ===
+# === Load Model ===
 @st.cache_resource
 def load_model():
     if not download_model():
@@ -41,10 +44,9 @@ def load_model():
 
 model = load_model()
 
-# === CLASS_NAMES langsung hardcode ===
+# === Class Names ===
 CLASS_NAMES = ["cardboard", "clothes", "glass", "paper", "plastic", "shoes", "tidak_diketahui"]
 
-# === Deskripsi Kelas ===
 CLASS_DESCRIPTIONS = {
     'cardboard': 'Kardus dan packaging.',
     'clothes': 'Pakaian bekas dan tekstil.',
@@ -55,23 +57,21 @@ CLASS_DESCRIPTIONS = {
     'tidak_diketahui': 'Sampah buangan yang tidak masuk ke kategori lain.'
 }
 
-# === Judul Halaman ===
+# === UI ===
 st.title("🗑️ Trash Classifier Image")
 
-# === Upload Form ===
 uploaded_file = st.file_uploader("Upload an image for classification", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     if model is None:
-        st.error("Model tidak tersedia. Tidak dapat melakukan prediksi.")
+        st.error("❌ Model tidak tersedia. Tidak dapat melakukan prediksi.")
     else:
         try:
             img = Image.open(uploaded_file).convert("RGB")
             img_resized = img.resize((224, 224))
             img_array = image.img_to_array(img_resized)
-            img_array = np.expand_dims(img_array, axis=0) / 255.0   # sesuai Rescaling(1./255)
+            img_array = np.expand_dims(img_array, axis=0) / 255.0
 
-            # Prediksi
             result = model.predict(img_array)
             prediction = CLASS_NAMES[np.argmax(result)]
             confidence = f"{np.max(result) * 100:.2f}%"
@@ -86,7 +86,7 @@ if uploaded_file is not None:
             st.write(f"**Filename:** {uploaded_file.name}")
             st.image(img, caption="Uploaded Image", use_column_width=True)
 
-            # === Tabel Probabilitas ===
+            # === Probabilities Table ===
             st.subheader("Class Probabilities")
             highlight_style = "background-color: #ffe599; font-weight: bold; color: black;"
             prob_table = "<table style='margin: 0 auto; border-collapse: collapse;'>"
@@ -101,9 +101,5 @@ if uploaded_file is not None:
 
             st.write(f"**Upload Time:** {upload_time}")
 
-            # Reset
-            if st.button("Reset/Clear"):
-                st.session_state.clear()
-                st.experimental_rerun()
         except Exception as e:
-            st.error(f"Terjadi error saat prediksi: {e}")
+            st.error(f"⚠️ Terjadi error saat prediksi: {e}")
