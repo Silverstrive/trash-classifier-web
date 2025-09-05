@@ -91,7 +91,7 @@ if uploaded_file is not None:
             st.write(f"**Prediction:** {prediction}")
             st.write(f"**Confidence:** {confidence}")
             st.write(f"**Filename:** {uploaded_file.name}")
-            st.image(img, caption="Uploaded Image", use_column_width=True)
+            st.image(img, caption="Uploaded Image", width=300)
 
             # === Tabel Probabilitas ===
             st.subheader("Class Probabilities")
@@ -114,3 +114,4 @@ if uploaded_file is not None:
                 st.experimental_rerun()
         except Exception as e:
             st.error(f"Terjadi error saat prediksi: {e}")
+
