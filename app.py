@@ -6,6 +6,8 @@ import streamlit as st
 from datetime import datetime
 from tensorflow.keras.preprocessing import image
 from PIL import Image
+import base64
+from io import BytesIO
 
 # === Konfigurasi path model ===
 MODEL_DIR = "model"
@@ -62,6 +64,12 @@ CLASS_DESCRIPTIONS = {
     'tidak_diketahui': 'Sampah buangan yang tidak masuk ke kategori lain.'
 }
 
+# === Fungsi konversi gambar ke base64 ===
+def image_to_base64(img):
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
+
 # === Judul Halaman ===
 st.title("🗑️ Trash Classifier Image")
 
@@ -91,7 +99,18 @@ if uploaded_file is not None:
             st.write(f"**Prediction:** {prediction}")
             st.write(f"**Confidence:** {confidence}")
             st.write(f"**Filename:** {uploaded_file.name}")
-            st.image(img, caption="Uploaded Image", width=300)
+
+            # Tampilkan gambar di tengah dengan ukuran lebih kecil
+            img_base64 = image_to_base64(img)
+            st.markdown(
+                f"""
+                <div style="text-align: center;">
+                    <img src="data:image/png;base64,{img_base64}" alt="Uploaded Image" width="300">
+                    <p>Uploaded Image</p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
             # === Tabel Probabilitas ===
             st.subheader("Class Probabilities")
@@ -114,4 +133,3 @@ if uploaded_file is not None:
                 st.experimental_rerun()
         except Exception as e:
             st.error(f"Terjadi error saat prediksi: {e}")
-
