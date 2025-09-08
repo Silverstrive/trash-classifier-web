@@ -6,8 +6,6 @@ import streamlit as st
 from datetime import datetime
 from tensorflow.keras.preprocessing import image
 from PIL import Image
-import base64
-from io import BytesIO
 
 # === Konfigurasi path model ===
 MODEL_DIR = "model"
@@ -64,12 +62,6 @@ CLASS_DESCRIPTIONS = {
     'tidak_diketahui': 'Sampah buangan yang tidak masuk ke kategori lain.'
 }
 
-# === Fungsi konversi gambar ke base64 ===
-def image_to_base64(img):
-    buffered = BytesIO()
-    img.save(buffered, format="PNG")
-    return base64.b64encode(buffered.getvalue()).decode()
-
 # === Judul Halaman ===
 st.title("🗑️ Trash Classifier Image")
 
@@ -81,7 +73,13 @@ if uploaded_file is not None:
         st.error("Model tidak tersedia. Tidak dapat melakukan prediksi.")
     else:
         try:
+            # Buka gambar
             img = Image.open(uploaded_file).convert("RGB")
+
+            # Kompres gambar besar
+            img.thumbnail((800, 800)) 
+
+            # Preprocess untuk model
             img_resized = img.resize((224, 224))
             img_array = image.img_to_array(img_resized)
             img_array = np.expand_dims(img_array, axis=0) / 255.0
@@ -100,17 +98,10 @@ if uploaded_file is not None:
             st.write(f"**Confidence:** {confidence}")
             st.write(f"**Filename:** {uploaded_file.name}")
 
-            # Tampilkan gambar di tengah dengan ukuran lebih kecil
-            img_base64 = image_to_base64(img)
-            st.markdown(
-                f"""
-                <div style="text-align: center;">
-                    <img src="data:image/png;base64,{img_base64}" alt="Uploaded Image" width="300">
-                    <p>Uploaded Image</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            # Gambar ditampilkan lebih kecil & center
+            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+            st.image(img, caption="Uploaded Image", width=300)
+            st.markdown("</div>", unsafe_allow_html=True)
 
             # === Tabel Probabilitas ===
             st.subheader("Class Probabilities")
