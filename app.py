@@ -75,9 +75,7 @@ if uploaded_file is not None:
         try:
             # Buka gambar
             img = Image.open(uploaded_file).convert("RGB")
-
-            # Kompres gambar besar
-            img.thumbnail((800, 800)) 
+            img.thumbnail((800, 800))  # kompres agar tidak terlalu besar
 
             # Preprocess untuk model
             img_resized = img.resize((224, 224))
@@ -99,9 +97,9 @@ if uploaded_file is not None:
             st.write(f"**Filename:** {uploaded_file.name}")
 
             # Gambar ditampilkan lebih kecil & center
-            st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
-            st.image(img, caption="Uploaded Image", width=300)
-            st.markdown("</div>", unsafe_allow_html=True)
+            col_left, col_center, col_right = st.columns([1, 2, 1])
+            with col_center:
+                st.image(img, caption="Uploaded Image", width=300)
 
             # === Tabel Probabilitas ===
             st.subheader("Class Probabilities")
